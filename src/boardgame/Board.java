@@ -1,6 +1,6 @@
 package boardgame;
 
-public class Board {
+public class Board { // classe para a construção do tabuleito
 	
 	private int rows;
 	private int columns;
