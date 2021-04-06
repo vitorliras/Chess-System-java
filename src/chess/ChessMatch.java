@@ -1,6 +1,7 @@
 package chess;
 
 import boardgame.Board;
+import boardgame.Piece;
 import boardgame.Position;
 import chess.pieces.King;
 import chess.pieces.Rook;
@@ -24,14 +25,46 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 		return mat;
 		
 	}
+	// metodo para tirar uma peça em uma posição de origem e coloca-la em outro local, seja um movimento ou captura
+	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) { 
+		Position source = sourcePosition.toPosition(); //coventendo a posição source e target para uma posição da matriz
+		Position target = targetPosition.toPosition();
+		validateSourcePosition(source);
+		Piece capturePiece = makeMove(source, target); //realizando o movimento da peça
+		return (ChessPiece)capturePiece; //com o downcasting, retornarei a peça capturada
+	}
+	
+	private Piece makeMove(Position source, Position target) {
+		Piece p = board.removePiece(source); //retira a peça da posicao de origem
+		Piece capturedPiece = board.removePiece(target); //remover uma possivel peça que esta na posição de destino
+		board.placePiece(p, target);
+		return capturedPiece;
+	}
+	
+	private void validateSourcePosition(Position position) {
+		if(!board.thereIsAPiece(position)) { //se não existir uma peça nessa posiçaõ, tem a exceção
+			throw new ChessException("There is no piece on source position");
+		}
+	}
+	
 	private void placeNewPiece(char column, int row, ChessPiece piece) { //instanciando a formula da posicão
 		board.placePiece(piece, new ChessPosition(column, row).toPosition());
 	}
 	
 	private void initialSetup() { // posição inicial das peças
-		placeNewPiece('a', 8,new Rook(board, Color.WHITE)); //agora
-		placeNewPiece('e', 8,new King(board, Color.WHITE));
-		placeNewPiece('e', 1,new King(board, Color.WHITE));
+		placeNewPiece('c', 1, new Rook(board, Color.WHITE));
+        placeNewPiece('c', 2, new Rook(board, Color.WHITE));
+        placeNewPiece('d', 2, new Rook(board, Color.WHITE));
+        placeNewPiece('e', 2, new Rook(board, Color.WHITE));
+        placeNewPiece('e', 1, new Rook(board, Color.WHITE));
+        placeNewPiece('d', 1, new King(board, Color.WHITE));
+
+        placeNewPiece('c', 7, new Rook(board, Color.BLACK));
+        placeNewPiece('c', 8, new Rook(board, Color.BLACK));
+        placeNewPiece('d', 7, new Rook(board, Color.BLACK));
+        placeNewPiece('e', 7, new Rook(board, Color.BLACK));
+        placeNewPiece('e', 8, new Rook(board, Color.BLACK));
+        placeNewPiece('d', 8, new King(board, Color.BLACK)); //AGORA
 		//board.placePiece(new King(board, Color.WHITE), new Position(7, 4)); //antes
 	}
 	

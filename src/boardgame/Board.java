@@ -30,6 +30,19 @@ public class Board { // classe para a construção do tabuleito
 		return pieces[row][column];
 	}
 	
+	public Piece removePiece(Position position) { //processo de remoção
+		if(!positionExists(position)) {
+			throw new BoardException("Position not on the board");
+		}
+		if (piece(position) == null) {
+			return null;
+		}
+		Piece aux = piece(position);
+		aux.position = null; //peça aux n tem posição mais
+		pieces[position.getRow()][position.getColumn()] = null; 
+		return aux; //retornando a peça que foi retirada
+	}
+	
 	public Piece piece(Position position) { //peca recebendo uma posicao
 		if(!positionExists(position)) {
 			throw new BoardException("Position not on the board");
