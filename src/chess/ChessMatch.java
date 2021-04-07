@@ -2,6 +2,7 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import boardgame.Board;
 import boardgame.Piece;
@@ -14,6 +15,7 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 	private int turn;
 	private Color currentPlayer;
 	private Board board;
+	private boolean check;
 	
 	private List<Piece> pieceOnTheBoard= new ArrayList<>();
 	private List<Piece> capturedPieces = new ArrayList<>();
@@ -31,6 +33,10 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 
 	public Color getCurrentPlayer() {
 		return currentPlayer;
+	}
+	
+	public boolean getCheck() {
+		return check;
 	}
 
 	public ChessPiece[][] getPieces(){
@@ -56,6 +62,14 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 		validateSourcePosition(source);
 		validateTargetPosition(source, target);
 		Piece capturePiece = makeMove(source, target); //realizando o movimento da peça
+		
+		if(testCheck(currentPlayer)) {
+			undoMove(source, target, capturePiece);
+			throw new ChessException("You can't put yourself in check");
+		}
+		
+		check = (testCheck(opponet(currentPlayer))) ? true : false;
+		
 		nextTurn();
 		return (ChessPiece)capturePiece; //com o downcasting, retornarei a peça capturada
 	}
@@ -71,6 +85,17 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 		}
 		
 		return capturedPiece;
+	}
+	
+	private void undoMove(Position source, Position target, Piece capturedPiece) { //desfazendo o movimento (lógica xeque)
+		Piece p = board.removePiece(target);
+		board.placePiece(p, source);
+		
+		if(capturedPiece !=null) {
+			board.placePiece(capturedPiece, target);
+			capturedPieces.remove(capturedPiece);
+			pieceOnTheBoard.add(capturedPiece);
+		}
 	}
 	
 	private void validateSourcePosition(Position position) {
@@ -93,6 +118,32 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 		if (!board.piece(source).possibleMove(target)) { // se para a peça de origem a posição de destino n é possivel, logo n pode mover pra lá
 			throw new ChessException("the chosen piece can't move to target position");
 		}
+	}
+	
+	private Color opponet(Color color) {
+		return(color == Color.WHITE) ? Color.BLACK : Color.WHITE; // se a cor passada no argumento for == white, ent vai retornar o color black, caso não, o retorna o white
+	}
+	
+	private ChessPiece king(Color color) { // Lógica de check
+		List<Piece> list = pieceOnTheBoard.stream().filter(x -> ((ChessPiece)x).getColor() == color).collect(Collectors.toList());
+		for(Piece p : list) {  //para cada peça p na lista list, caso a peça p é uma instancia de KIng, ent encontrou o King
+			if (p instanceof King) { 
+				return(ChessPiece)p;
+			}
+		}
+		throw new IllegalStateException("There is no "+ color +" King on the board");
+	}
+	
+	private boolean testCheck(Color color) { //Testando o check
+		Position kingPosition = king(color).getchessPosition().toPosition();
+		List<Piece> opponetPieces = pieceOnTheBoard.stream().filter(x -> ((ChessPiece)x).getColor() == opponet(color)).collect(Collectors.toList());
+		for(Piece p : opponetPieces) {
+			boolean[][] mat = p.possibleMoves();
+			if(mat[kingPosition.getRow()][kingPosition.getColumn()]){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private void placeNewPiece(char column, int row, ChessPiece piece) { //instanciando a formula da posicão
