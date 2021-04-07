@@ -42,8 +42,11 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 	}
 	
 	private void validateSourcePosition(Position position) {
-		if(!board.thereIsAPiece(position)) { //se não existir uma peça nessa posiçaõ, tem a exceção
+		if(!board.thereIsAPiece(position)) { //se não existir uma peça nessa posição, tem a exceção
 			throw new ChessException("There is no piece on source position");
+		}
+		if(!board.piece(position).isThereAnyPossibleMove()) { // verificar se existe movimentos possiveis para a peça
+			throw new ChessException("There is no possible moves for this the chosen piece");
 		}
 	}
 	
