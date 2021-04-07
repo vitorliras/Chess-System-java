@@ -22,9 +22,15 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 				mat[i][j] = (ChessPiece) board.piece(i, j);
 			}
 		}
-		return mat;
-		
+		return mat;	
 	}
+	
+	public boolean[][] possibleMove(ChessPosition sourcePosition){ //metodo para imprimir os movimento possiveis a partir da posição de origem
+		Position position = sourcePosition.toPosition();
+		validateSourcePosition(position);
+		return board.piece(position).possibleMoves();
+	}
+	
 	// metodo para tirar uma peça em uma posição de origem e coloca-la em outro local, seja um movimento ou captura
 	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) { 
 		Position source = sourcePosition.toPosition(); //coventendo a posição source e target para uma posição da matriz
