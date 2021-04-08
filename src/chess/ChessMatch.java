@@ -1,5 +1,6 @@
 package chess;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 	private boolean check;
 	private boolean checkMate;
 	private ChessPiece enPassantVulnerable;
+	private ChessPiece promoted;
 
 	private List<Piece> pieceOnTheBoard = new ArrayList<>();
 	private List<Piece> capturedPieces = new ArrayList<>();
@@ -33,6 +35,10 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 		initialSetup();
 	}
 
+	public ChessPiece getPromoted() {
+		return promoted;
+	}
+	
 	public int getTurn() {
 		return turn;
 	}
@@ -73,8 +79,7 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 	// metodo para tirar uma peça em uma posição de origem e coloca-la em outro
 	// local, seja um movimento ou captura
 	public ChessPiece performChessMove(ChessPosition sourcePosition, ChessPosition targetPosition) {
-		Position source = sourcePosition.toPosition(); // coventendo a posição source e target para uma posição da
-														// matriz
+		Position source = sourcePosition.toPosition(); // coventendo a posição source e target para uma posição da												
 		Position target = targetPosition.toPosition();
 		validateSourcePosition(source);
 		validateTargetPosition(source, target);
@@ -87,6 +92,15 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 
 		ChessPiece movedPiece = (ChessPiece) board.piece(target);
 
+		// #Specialmove Promotion
+		promoted = null;
+		if(movedPiece instanceof pawn) {
+			if(movedPiece.getColor() == Color.WHITE && target.getRow() == 0 || movedPiece.getColor() == Color.BLACK && target.getRow() == 7) {
+				promoted = (ChessPiece)board.piece(target);
+				promoted = replacePromotedPiece("Q");
+			}
+		}
+		
 		check = (testCheck(opponet(currentPlayer))) ? true : false;
 
 		if (testCheckMate(opponet(currentPlayer))) {
@@ -105,6 +119,32 @@ public class ChessMatch { // classe que serve para a s jogadas do xadrez
 		}
 
 		return (ChessPiece) capturePiece; // com o downcasting, retornarei a peça capturada
+	}
+	
+	public ChessPiece replacePromotedPiece(String type) {
+		if(promoted == null) {
+			throw new IllegalStateException("There is no piece to be promoted");
+		}
+		if(!type.equals("B") && !type.equals("C") && !type.equals("R") && !type.equals("Q")) {
+			throw new InvalidParameterException("Invalid type for promotion");
+		}
+		
+		Position pos = promoted.getchessPosition().toPosition();
+		Piece p = board.removePiece(pos);
+		pieceOnTheBoard.remove(p);
+		
+		ChessPiece newPiece = newPiece(type, promoted.getColor());
+		board.placePiece(newPiece, pos);
+		pieceOnTheBoard.add(newPiece);
+		
+		return newPiece;
+	}
+	
+	private ChessPiece newPiece(String type, Color color) {
+		if(type.equals("B")) return new Bishop(board, color);
+		if(type.equals("C")) return new Knight(board, color);
+		if(type.equals("R")) return new Rook(board, color);
+	    return new Queen(board, color);
 	}
 
 	private Piece makeMove(Position source, Position target) {
